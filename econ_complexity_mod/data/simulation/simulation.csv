@@ -1,0 +1,23 @@
+Mod "Economie Complexe" - prototype - ajoute des valeurs intermediaires entre les stats existantes
+Toute ligne qui NE commence PAS par # est un commentaire, ignoree par le jeu.
+Format d'une ligne active : #,Name,Zone,Default,Min,Max,Emotion,Icon,#,[inputs...],#,[outputs...]
+Format d'un effet (input ou output) : Name,Equation,Inertia (repete autant de fois que necessaire)
+IMPORTANT : verifie dans TON fichier data\simulation\simulation.csv que les noms GDP / Unemployment / Inflation / InterestRate / Debt correspondent bien a la colonne B de ces stats chez toi. Si un nom ne matche pas, l'effet est juste ignore (pas de crash), mais il ne fait rien.
+
+--- Valeur 1 : CreditConditions -------------------------------------------------
+Represente la disponibilite reelle du credit dans l'economie. Idee : le credit ne se degrade pas
+lineairement avec les taux d'interet ou la dette, il s'effondre au-dela d'un seuil (exposant ^2),
+comme un vrai credit crunch. Ca casse le cote "plus je monte le curseur, plus l'effet est proportionnel".
+#,CreditConditions,Economy,0.65,0,1,good,icons/generic_economy.svg,#,InterestRate,1-(x^1.6),2,Debt,1-(x^2.2),3,#,GDP,-0.12+(0.24*x),3,Unemployment,0.09-(0.09*(x^1.4)),4
+
+--- Valeur 2 : EconomicMomentum --------------------------------------------------
+Le point cle : cette valeur se nourrit d'elle-meme (auto-reference) et du PIB, avec une forte inertie.
+Resultat en jeu : au lieu d'une convergence lisse vers un equilibre, on obtient des cycles
+boom/bust qui se declenchent avec du retard par rapport aux decisions du joueur -> beaucoup moins previsible.
+#,EconomicMomentum,Economy,0.5,0,1,unknown,icons/generic_economy.svg,#,GDP,(x-0.5)*1.8,5,EconomicMomentum,(x-0.5)*(-0.6),6,#,GDP,0.15*(x-0.5),2,Inflation,0.06*(x-0.5),3
+
+--- Valeur 3 (optionnelle, a completer) : SupplyChainStress ----------------------
+Idee non finalisee : faire depender l'inflation d'un choc d'offre plutot que uniquement de la demande.
+Remplace "Tariffs" / "Technology" ci-dessous par les vrais noms d'objets trouves dans TON policies.csv
+si tu veux l'activer (retire le commentaire ci-dessous en ajoutant un # en debut de ligne).
+#,SupplyChainStress,Economy,0.3,0,1,bad,icons/generic_economy.svg,#,Technology,0.3-(0.3*x),3,#,Inflation,0.1*(x^2),3
