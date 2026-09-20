@@ -2,5 +2,5 @@
 name = economie_complexe
 path = C:\Users\Gaga\Documents\My Games\democracy4\mods\economie_complexe
 guiname = Économie Complexe (prototype)
-author = Gaga
+author = kevinraphael95
 description = Ajoute 3 valeurs de simulation intermediaires (credit, choc d'offre, momentum) pour casser les relations lineaires de l'economie de base et introduire des seuils, des cycles et des retards.
