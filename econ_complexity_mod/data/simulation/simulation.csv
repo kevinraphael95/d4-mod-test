@@ -5,10 +5,14 @@ Format d'un effet (input ou output) : Name,Equation,Inertia (repete autant de fo
 IMPORTANT : verifie dans TON fichier data\simulation\simulation.csv que les noms GDP / Unemployment / Inflation / InterestRate / Debt correspondent bien a la colonne B de ces stats chez toi. Si un nom ne matche pas, l'effet est juste ignore (pas de crash), mais il ne fait rien.
 
 --- Valeur 1 : CreditConditions -------------------------------------------------
-Represente la disponibilite reelle du credit dans l'economie. Idee : le credit ne se degrade pas
-lineairement avec les taux d'interet ou la dette, il s'effondre au-dela d'un seuil (exposant ^2),
-comme un vrai credit crunch. Ca casse le cote "plus je monte le curseur, plus l'effet est proportionnel".
-#,CreditConditions,Economy,0.65,0,1,good,icons/generic_economy.svg,#,InterestRate,1-(x^1.6),2,Debt,1-(x^2.2),3,#,GDP,-0.12+(0.24*x),3,Unemployment,0.09-(0.09*(x^1.4)),4
+Represente la disponibilite reelle du credit dans l'economie. Corrige apres verification de ton
+simulation.csv : "InterestRate" n'existe pas dans le jeu, et "Debt" n'est pas un objet normal mais
+la variable speciale cachee _effectivedebt_ (deja utilisee par le jeu pour BusinessConfidence et
+Stability). Idee inchangee : le credit ne se degrade pas lineairement, il s'effondre au-dela d'un
+seuil de dette (exposant ^2.2), comme un vrai credit crunch. BusinessConfidence (confirme reel,
+ligne 10 de ton simulation.csv) vient nuancer : meme avec une dette elevee, une bonne confiance
+des affaires amortit un peu le choc.
+#,CreditConditions,Economy,0.65,0,1,good,icons/generic_economy.svg,#,_effectivedebt_,1-(x^2.2),3,BusinessConfidence,0.3*x,2,#,GDP,-0.12+(0.24*x),3,Unemployment,0.09-(0.09*(x^1.4)),4
 
 --- Valeur 2 : EconomicMomentum --------------------------------------------------
 Le point cle : cette valeur se nourrit d'elle-meme (auto-reference) et du PIB, avec une forte inertie.
@@ -16,8 +20,20 @@ Resultat en jeu : au lieu d'une convergence lisse vers un equilibre, on obtient 
 boom/bust qui se declenchent avec du retard par rapport aux decisions du joueur -> beaucoup moins previsible.
 #,EconomicMomentum,Economy,0.5,0,1,unknown,icons/generic_economy.svg,#,GDP,(x-0.5)*1.8,5,EconomicMomentum,(x-0.5)*(-0.6),6,#,GDP,0.15*(x-0.5),2,Inflation,0.06*(x-0.5),3
 
---- Valeur 3 (optionnelle, a completer) : SupplyChainStress ----------------------
-Idee non finalisee : faire depender l'inflation d'un choc d'offre plutot que uniquement de la demande.
-Remplace "Tariffs" / "Technology" ci-dessous par les vrais noms d'objets trouves dans TON policies.csv
-si tu veux l'activer (retire le commentaire ci-dessous en ajoutant un # en debut de ligne).
-#,SupplyChainStress,Economy,0.3,0,1,bad,icons/generic_economy.svg,#,Technology,0.3-(0.3*x),3,#,Inflation,0.1*(x^2),3
+--- Valeur 3 : SupplyChainStress (maintenant branchee sur les politiques) --------
+Idee : l'inflation ne depend plus seulement de la demande (impots, depenses) mais aussi d'un
+choc d'offre pilote par de vraies politiques : les tarifs douaniers (ImportTarrifs, verifie chez
+toi : le jeu ecrit "Tarrifs" avec deux r, pas "Tariffs") augmentent le stress de facon non-lineaire
+(^1.8, un petit tarif ne fait presque rien, un gros tarif fait tres mal), la Technologie attenue
+le stress (meilleure logistique/resilience des chaines).
+Noms confirmes via policies.csv ET simulation.csv fournis : GDP, Unemployment, Inflation, Technology,
+BusinessConfidence, ImportTarrifs, et la variable speciale _effectivedebt_.
+#,SupplyChainStress,Economy,0.3,0,1,bad,icons/generic_economy.svg,#,ImportTarrifs,0.5*(x^1.8),3,Technology,0.25-(0.25*x),4,#,Inflation,0.15*(x^2),3,GDP,-0.08*x,3
+
+--- Branchement supplementaire : la dette influence aussi le momentum -----------
+Ligne separee (meme cible EconomicMomentum) pour montrer qu'on peut ajouter des inputs a une
+valeur existante en repetant une ligne avec le meme nom en colonne B : plus la dette est elevee,
+plus le momentum devient instable (l'ecart a 0.5 est amplifie au lieu d'etre amorti).
+Active (ajoute un # au debut de la ligne suivante) seulement apres avoir teste la version de base
+ci-dessus, pour isoler l'effet de chaque ajout en jeu. Inactif par defaut :
+EconomicMomentum,Economy,0.5,0,1,unknown,icons/generic_economy.svg,#,_effectivedebt_,(x-0.5)*0.4,4,#,GDP,0.05*(x-0.5),2
